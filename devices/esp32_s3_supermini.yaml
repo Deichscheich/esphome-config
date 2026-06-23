@@ -1,9 +1,10 @@
----
-# Device: Generic ESP32 DevKit board
-#
 packages:
-  <<: !include_dir_named ../components/common
-  board: !include ../boards/esp32_s3_supermini.yaml
-
-# [ ] LED
-# [ ] SPI + I2C
+  common: !include ../packages/base.yaml
+  monitoring: !include ../packages/monitoring.yaml
+  esp32_defaults: !include ../packages/esp32.yaml
+esphome:
+  name: "esph_${system_name}"
+  comment: "${device_description}"
+  build_path: "./.build/esph_${system_name}/"
+esp32:
+  board: esp32-s3-devkitc-1

@@ -1,7 +1,0 @@
----
-# Status
-#
-# https://esphome.io/components/binary_sensor/status.html
-#
-binary_sensor:
-  - <<: !include ../binary_sensors/status_sensor.yaml

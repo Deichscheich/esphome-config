@@ -1,7 +1,0 @@
----
-# Restart
-#
-# https://esphome.io/components/switch/restart.html
-#
-switch:
-  - <<: !include ../switches/restart.yaml

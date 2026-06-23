@@ -23,14 +23,14 @@ I have a number of ESPHome devices around my Smart Home and I've to provide a de
 Typically I leverage three substitutions in my configs. These ensure I have a common hostname, readable and friendly name for entities and a useful description displayed in the ESPHome dashboard for each of my devices.
 ```yaml
 substitutions:
-  system_name: <hostname all lowercase with underscores as spaces i.e living_room>
+  device_name: <hostname all lowercase with underscores as spaces i.e living_room>
   friendly_name: <usually CAML case version of the hostname i.e Living Room>
   device_description: <useful description of the config and or project>
 ```
 To ensure all my ESPHome nodes have a consistent hostname I use the following when defining my ESPHome config. You can see from the code block below I prefix all my nodes with ```esph_``` and I include the ```{$device_description}``` to define the device comment.
 ```yaml
 esphome:
-  name: "esph_${system_name}"
+  name: "esph_${device_name}"
   comment: ${device_description}
   platform: ESP32
   board: pico32
@@ -60,155 +60,32 @@ This results in all the entities from this node are returned when searching for 
 1. Once the device in running I make futher config edits and update OTA until I am happy with the project. 
 1. I leverage the device webpage and logs in my testing. Once everything is working fine I then add the device to Home Assistant.#
 
-## Splitting up the ESPHome configuration
-A pattern I have seen used by a others in the community which makes an ESPHome config much more readable is to split out common components to their own ```.yaml``` files. More recently (early May) [@frenck](https://github.com/frenck/home-assistant-config/tree/master/config/esphome) refactored his config and stepped up the split configuration even further by seperating ESP boards, types of devices and the common components used. 
+## Configuration Structure
 
-In this repo you will see I use this same approach of splitting out the configuration and I hope this explanation does it justice.
+The configuration has been simplified.
 
-```
-|-- ESPHome-Config
-    |-- .build (local directory not pushed to this repo)
-    |-- .esphome (local directory not push to this repo)
-    |-- assets (storage for images and fonts used in my configs)
-    |   |-- fonts
-    |   |   |-- segoeui.ttf
-    |   |-- image.png
-    |-- boards (definitions for each board type)
-    |   |-- .esphome.yaml
-    |   |-- board_definition.yaml
-    |-- components (used to organised yaml files)
-    |   |-- binary_sensors
-    |   |   |-- status_sensor.yaml
-    |   |-- colors
-    |   |   |-- red.yaml
-    |   |   |-- green.yaml
-    |   |   |-- blue.yaml
-    |   |-- common
-    |   |   |-- api.yaml    
-    |   |   |-- captive_portal.yaml    
-    |   |   |-- logger.yaml    
-    |   |   |-- ota.yaml    
-    |   |   |-- restart.yaml    
-    |   |   |-- secrets.yaml (references root secrets file)  
-    |   |   |-- status.yaml    
-    |   |   |-- time.yaml    
-    |   |   |-- web_server.yaml    
-    |   |   |-- wifi.yaml    
-    |   |-- core
-    |   |   |-- i2c_esp32.yaml
-    |   |-- fonts
-    |   |   |-- segoe_ui_12.yaml
-    |   |   |-- segoe_ui_32.yaml
-    |   |-- sensors
-    |   |   |-- cse7766.yaml
-    |   |   |-- uptime_timestamp.yaml
-    |   |   |-- uptime.yaml
-    |   |   |-- wifi_signal_percentage.yaml
-    |   |   |-- wifi_signal.yaml
-    |   |-- switches
-    |   |   |-- restart.yaml
-    |   |-- text_sensors
-    |   |   |-- version.yaml
-    |   |   |-- wifi_info.yaml
-    |   |-- time
-    |   |   |-- homeassistant.yaml
-    |   |   |-- sntp.yaml
-    |-- devices (device definitions)
-    |   |-- esp32_._pico.yaml
-    |   |-- m5_stick_c.yaml
-    |   |-- sonoff_basic.yaml
-    |   |-- sonoff_pow_r2.yaml
-    |-- readme (collection of readme files for each of my configs shared in this repo)
-    |   |-- assets (storage for pictures included in my readme files)
-    |   |   |-- image.png
-    |   |-- readme.md
-    |-- .gitignore
-    |-- esph_device_configuration_1.yaml (definition for each ESP board I run ESPHome on)
-    |-- esph_device_configuration_2.yaml
-    |-- esph_device_configuration_3.yaml
-    |-- readme.md (this readme)
-    |-- secrets.yaml (where passwords and other secrets are stored and not pushed to this repo)
+- `devices/` contains complete device profiles including board definitions.
+- `packages/base.yaml` contains the shared functionality used by nearly every node (WiFi, API, OTA, logger, web server, status sensors, uptime, time sync and restart switch).
+- `components/` now only contains reusable parts such as sensors, fonts, colors and helper snippets.
+- The `boards/` directory has been removed because it added an extra layer of indirection with very little benefit.
 
-```
-### Boards
-A ```boards``` directory exists where each different type of ESP board type is defined in a separate ```board definition``` file like the example shown below.  
-```yaml
-esphome:
-  <<: !include .esphome.yaml
-  platform: ESP32
-  board: m5stick-c
-```
-There is also a shared definition ```.esphome.yaml``` where common attributes are maintained like the device name, comment and build path.
-```yaml
-name: "esph_${system_name}"
-comment: "${device_description}"
-build_path: "./.build/esph_${system_name}/"
-```
-The ```build_path``` attribute in the above codeblock places the build directory for each device in the ```.build``` folder in my config root and is not shared in this repo.
-
-### Devices
-In the ```devices``` folder there is a template ```device definition``` for each type of ESP device. This allows a device definition to be created for a specific manufacturers device for example a Sonoff Basic or M5 Stick C. Each device definition includes the components that are available for that device. This allows the device to defined once and referenced in multiple ESPHome configs.
-
-```yaml
-packages:
-  <<: !include_dir_named ../components/common
-  board: !include ../boards/esp_01.yaml
-```
-The device configuration inherits the ```board definition``` described above as well as ```common components``` describe below. This is where ```binary_sensor```, ```switch```, ```sensor``` components for that device can be included.
-
-### Common Components
-To standardise a number of common components each configuration defined in ```/components/common/``` folder is included in each ```device definition``` via the ```<<: !include_dir_named ../components/common``` include. This means the following components only need to be defined once:
-
-1. API
-1. Captive portal
-1. Logger
-1. OTA
-1. Restart switch
-1. Status
-1. Time
-1. Web Server
-1. Wifi
-
-Alongside the ```common components``` other components can be added to specific boards such as ```i2c```, ```font``` and ```colors```. 
-
-*@Frenck makes a great point in his repo in that we should not be pushing sensor date like uptime to Home Assistant and he has made some great changes to the ```uptime.yaml``` and ```uptime_timestamp.yaml``` sensors to prevent this unnecessary data being processed by Home Assistant.*
-
-```yaml
-packages:
-  <<: !include_dir_named ../components/common
-  board: !include ../boards/m5_stick_c.yaml
-  i2c: ../components/core/i2c_esp32.yaml
-  <<: !include_dir_named ../components/fonts
-  <<: !include_dir_named ../components/colors
-```
-
-### Config
-A config file now just needs to include ```substitutions```, the package block to inherit the correct ```device definition``` and any specific components the project needs. 
-
-Remember these configs need to exist in the root of the config directory for them to appear on the ESPHome dashboard. If you add a ```.``` prefix to the config file name they will be hidden. In my case anything in my repo with a ```~``` prefix doesn't get pushed to this repo.
+Example:
 
 ```yaml
 substitutions:
-  system_name: device_name
+  device_name: device_name
   friendly_name: Device Name
-  device_description: "Useful description."
+  device_description: Useful description
 
 packages:
   device: !include devices/esp32_pico.yaml
 ```
 
-Additional attribute can be defined in the config for example add something to ```on_boot``` this can be added after the packages block. 
-```yaml
-esphome:
-  on_boot:
-    priority: -10  
-    then:
-      - switch.turn_on: device_relay
-```
-Or to change the device name.
+Device profiles now directly define their ESP32/ESP8266 board using modern ESPHome syntax:
 
 ```yaml
-wifi:
-  use_address: old_device_name
+esp32:
+  board: pico32
 ```
-> Note: When renaming devices don't forget to clean up old device directory from the .build folder and json config in .esphome directory.
+
+This reduces the number of files substantially while keeping the reusable parts modular.

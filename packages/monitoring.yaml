@@ -1,0 +1,24 @@
+binary_sensor:
+  - <<: !include ../components/binary_sensors/status_sensor.yaml
+
+sensor:
+  - <<: !include ../components/sensors/uptime.yaml
+  - <<: !include ../components/sensors/uptime_timestamp.yaml
+  - <<: !include ../components/sensors/wifi_signal_percentage.yaml
+  - <<: !include ../components/sensors/wifi_signal.yaml
+    on_value:
+      - component.update: sensor_wifi_signal_percentage
+
+text_sensor:
+  - <<: !include ../components/text_sensors/wifi_info.yaml
+
+switch:
+  - <<: !include ../components/switches/restart.yaml
+
+time:
+  - <<: !include ../components/time/homeassistant.yaml
+    timezone: "${time_timezone}"
+    on_time_sync:
+      - component.update: sensor_uptime_timestamp
+  - <<: !include ../components/time/sntp.yaml
+    timezone: "${time_timezone}"
