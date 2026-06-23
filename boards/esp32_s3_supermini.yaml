@@ -1,0 +1,12 @@
+---
+# ESP32-S3 Super Mini
+#
+# ESP32-S3 Super Mini is a development board based on the ESP32S3 microcontroller using XTENSA architecture.
+# This board features a maximum CPU frequency of 240 MHz and 4MB flash memory.
+#
+# https://www.espboards.dev/esp32/esp32-s3-super-mini/
+#
+esphome:
+  <<: !include .esphome.yaml
+  platform: ESP32
+  board: esp32-s3-devkitc-1
