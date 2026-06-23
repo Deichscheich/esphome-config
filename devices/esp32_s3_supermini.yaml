@@ -3,8 +3,9 @@ packages:
   monitoring: !include ../packages/monitoring.yaml
   esp32_defaults: !include ../packages/esp32.yaml
 esphome:
-  name: "esph_${system_name}"
+  name: "esph-${device_name}"
+  friendly_name: "${friendly_name}"
   comment: "${device_description}"
-  build_path: "./.build/esph_${system_name}/"
+  build_path: "./.build/esph-${device_name}/"
 esp32:
   board: esp32-s3-devkitc-1
