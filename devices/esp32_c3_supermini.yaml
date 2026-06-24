@@ -1,0 +1,18 @@
+# Device: ESP32-C3 SuperMini
+#
+# Single-core RISC-V SoC, 4 MB flash, USB-C
+# https://docs.platformio.org/en/latest/boards/espressif32/esp32-c3-devkitm-1.html
+#
+packages:
+  common: !include ../packages/base.yaml
+  monitoring: !include ../packages/monitoring.yaml
+  esp32_defaults: !include ../packages/esp32.yaml
+
+esphome:
+  name: "esph-${device_name}"
+  friendly_name: "${friendly_name}"
+  comment: "${device_description}"
+  build_path: "./.build/esph-${device_name}/"
+
+esp32:
+  board: esp32-c3-devkitm-1
